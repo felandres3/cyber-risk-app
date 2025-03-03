@@ -8,7 +8,7 @@ function App() {
   const [probabilityFilter, setProbabilityFilter] = useState('');
   const [risks, setRisks] = useState([]);
   const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(10); // Nuevo estado para registros por página
+  const [perPage, setPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [sortBy, setSortBy] = useState('');
   const [sortDir, setSortDir] = useState('asc');
@@ -16,7 +16,7 @@ function App() {
   const fetchRisks = async () => {
     try {
       const url = `http://localhost:5000/risks?search=${search}&id=${idFilter}&impact=${impactFilter}&probability=${probabilityFilter}&page=${page}&per_page=${perPage}&sort_by=${sortBy}&sort_dir=${sortDir}`;
-      console.log('Fetching URL:', url); // Depuración
+      console.log('Fetching URL:', url);
       const response = await axios.get(url);
       setRisks(response.data.risks);
       setTotalPages(response.data.total_pages);
@@ -62,7 +62,21 @@ function App() {
 
   const handlePerPageChange = (e) => {
     setPerPage(Number(e.target.value));
-    setPage(1); // Reinicia a la primera página al cambiar perPage
+    setPage(1);
+  };
+
+  // Función para resaltar texto
+  const highlightText = (text, searchTerm) => {
+    if (!searchTerm || !text) return text;
+    const regex = new RegExp(`(${searchTerm})`, 'gi');
+    const parts = text.split(regex);
+    return parts.map((part, index) =>
+      regex.test(part) ? (
+        <span key={index} className="bg-yellow-200">{part}</span>
+      ) : (
+        part
+      )
+    );
   };
 
   return (
@@ -162,8 +176,8 @@ function App() {
             risks.map(risk => (
               <tr key={risk.id}>
                 <td className="p-2 border-b">{risk.id}</td>
-                <td className="p-2 border-b">{risk.title}</td>
-                <td className="p-2 border-b">{risk.description}</td>
+                <td className="p-2 border-b">{highlightText(risk.title, search)}</td>
+                <td className="p-2 border-b">{highlightText(risk.description, search)}</td>
                 <td className="p-2 border-b">{risk.impact}</td>
                 <td className="p-2 border-b">{risk.probability}</td>
                 <td className="p-2 border-b">{risk.category}</td>
