@@ -3,13 +3,14 @@ import axios from 'axios';
 
 function App() {
   const [search, setSearch] = useState('');
+  const [idFilter, setIdFilter] = useState(''); // Estado para el ID
   const [risks, setRisks] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
   const fetchRisks = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/risks?search=${search}&page=${page}&per_page=10`);
+      const response = await axios.get(`http://localhost:5000/risks?search=${search}&id=${idFilter}&page=${page}&per_page=10`);
       setRisks(response.data.risks);
       setTotalPages(response.data.total_pages);
     } catch (error) {
@@ -20,23 +21,37 @@ function App() {
 
   useEffect(() => {
     fetchRisks();
-  }, [search, page]);
+  }, [search, idFilter, page]);
 
   const handleSearch = (e) => {
     setSearch(e.target.value);
-    setPage(1);
+    setPage(1); // Reinicia página al buscar
+  };
+
+  const handleIdFilter = (e) => {
+    setIdFilter(e.target.value);
+    setPage(1); // Reinicia página al filtrar por ID
   };
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center p-4">
       <h1 className="text-3xl font-bold text-blue-600 mb-6">Gestión de Riesgos</h1>
-      <input
-        type="text"
-        value={search}
-        onChange={handleSearch}
-        placeholder="Buscar riesgos (ej: ataque)"
-        className="w-full max-w-md p-2 mb-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-      />
+      <div className="flex gap-4 mb-4">
+        <input
+          type="text"
+          value={search}
+          onChange={handleSearch}
+          placeholder="Buscar riesgos (ej: ataque)"
+          className="w-full max-w-md p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <input
+          type="number"
+          value={idFilter}
+          onChange={handleIdFilter}
+          placeholder="ID"
+          className="w-24 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
       <table className="w-full max-w-4xl border-collapse bg-white shadow-md rounded-md">
         <thead>
           <tr className="bg-gray-200">
@@ -65,7 +80,7 @@ function App() {
           ) : (
             <tr>
               <td colSpan="7" className="p-4 text-center text-gray-500">
-                {search ? 'No se encontraron riesgos' : 'Escribe algo para buscar riesgos'}
+                {(search || idFilter) ? 'No se encontraron riesgos' : 'Escribe algo para buscar riesgos'}
               </td>
             </tr>
           )}
