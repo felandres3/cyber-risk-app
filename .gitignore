@@ -1,6 +1,7 @@
 venv
 .env
 .vscode
-#borrar todo lo de pycache
 __pycache__/
 __pycache__/*
+
+node_modules/
