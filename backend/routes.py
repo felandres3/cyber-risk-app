@@ -14,11 +14,12 @@ def init_routes(app):
         probability = request.args.get('probability', default=None, type=int)
         page = request.args.get('page', default=1, type=int)
         per_page = request.args.get('per_page', default=10, type=int)
+        sort_by = request.args.get('sort_by', default=None, type=str)  # Captura sort_by
+        sort_dir = request.args.get('sort_dir', default='asc', type=str)  # Captura sort_dir
 
-        # Imprimir parámetros justo después de obtenerlos
-        print(f"Routes params: search={search}, id={risk_id}, impact={impact}, probability={probability}, page={page}, per_page={per_page}")
+        print(f"Route params: search={search}, id={risk_id}, impact={impact}, probability={probability}, page={page}, per_page={per_page}, sort_by={sort_by}, sort_dir={sort_dir}")
 
-        result = get_risks(search, risk_id, impact, probability, page, per_page)
+        result = get_risks(search, risk_id, impact, probability, page, per_page, sort_by, sort_dir)
         if result.success:
             return jsonify(result.value)
         return jsonify({"error": result.error}), 500

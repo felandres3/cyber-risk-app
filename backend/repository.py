@@ -5,38 +5,23 @@ from models import Result
 def get_db_connection():
     return psycopg2.connect(**DB_CONFIG)
 
-# Diccionario de predicados para los filtros
 FILTER_PREDICATES = {
-    "search": lambda value: (
-        "(title ILIKE %s OR description ILIKE %s)",
-        [f"%{value}%", f"%{value}%"],
-    ),
-    "id": lambda value: (
-        "id = %s",
-        [value]
-    ),
-    "impact": lambda value: (
-        "impact = %s",
-        [value]
-    ),
-    "probability": lambda value: (
-        "probability = %s",
-        [value]
-    )
+    "search": lambda value: ("(title ILIKE %s OR description ILIKE %s)", [f"%{value}%", f"%{value}%"]),
+    "id": lambda value: ("id = %s", [value]),
+    "impact": lambda value: ("impact = %s", [value]),
+    "probability": lambda value: ("probability = %s", [value])
 }
 
-def get_risks(search=None, risk_id=None, impact=None, probability=None, page=1, per_page=10):
+def get_risks(search=None, risk_id=None, impact=None, probability=None, page=1, per_page=10, sort_by=None, sort_dir='asc'):
     conn = None
     cur = None
     try:
         conn = get_db_connection()
         cur = conn.cursor()
 
-        # Construir la consulta base
         query = "SELECT id, title, description, impact, probability, category, status FROM risks WHERE 1=1"
         params = []
 
-        # Mapear parámetros a sus nombres en el diccionario
         filters = {
             "search": search,
             "id": risk_id,
@@ -44,27 +29,40 @@ def get_risks(search=None, risk_id=None, impact=None, probability=None, page=1, 
             "probability": probability
         }
 
-        # Aplicar filtros del diccionario de predicados
+        print(f"Received params: search={search}, id={risk_id}, impact={impact}, probability={probability}, sort_by={sort_by}, sort_dir={sort_dir}")
+
         for filter_name, filter_value in filters.items():
-            if filter_value is not None:
-                print(filter_name, filter_value, "filter")
+            if filter_value:
                 condition, param_values = FILTER_PREDICATES[filter_name](filter_value)
                 query += f" AND {condition}"
                 params.extend(param_values)
 
-        # Contar total de resultados para paginación
+        # Ordenamiento
+        if sort_by and sort_by in ['id', 'title', 'description', 'impact', 'probability', 'category', 'status']:
+            sort_dir = 'DESC' if sort_dir.lower() == 'desc' else 'ASC'
+            query += f" ORDER BY {sort_by} {sort_dir}"
+        else:
+            print("No valid sort_by provided or sort_by not in allowed columns")
+
+        print(f"Query before pagination: {query}")
+        print(f"Params before pagination: {params}")
+
+        # Contar total
         count_query = f"SELECT COUNT(*) FROM ({query}) AS total"
         cur.execute(count_query, params)
         total_risks = cur.fetchone()[0]
 
-        # Aplicar paginación
+        # Paginación
         offset = (page - 1) * per_page
-        query += " ORDER BY id LIMIT %s OFFSET %s"
+        query += " LIMIT %s OFFSET %s"
         params.extend([per_page, offset])
 
-        # Ejecutar la consulta principal
+        print(f"Final query: {query}")
+        print(f"Final params: {params}")
+
         cur.execute(query, params)
         risks = cur.fetchall()
+        print(f"Fetched risks: {risks}")
 
         risks_list = [
             {
@@ -79,7 +77,6 @@ def get_risks(search=None, risk_id=None, impact=None, probability=None, page=1, 
             for row in risks
         ]
 
-        # Devolver resultado con paginación
         result = {
             "risks": risks_list,
             "total": total_risks,
@@ -89,6 +86,7 @@ def get_risks(search=None, risk_id=None, impact=None, probability=None, page=1, 
         }
         return Result.success(result)
     except Exception as e:
+        print(f"Exception: {str(e)}")
         return Result.failure(f"Database error: {str(e)}")
     finally:
         if cur:

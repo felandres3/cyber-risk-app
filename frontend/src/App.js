@@ -4,16 +4,18 @@ import axios from 'axios';
 function App() {
   const [search, setSearch] = useState('');
   const [idFilter, setIdFilter] = useState('');
-  const [impactFilter, setImpactFilter] = useState(''); // Mantiene el valor como string vacío por default
-  const [probabilityFilter, setProbabilityFilter] = useState(''); // Igual aquí
+  const [impactFilter, setImpactFilter] = useState('');
+  const [probabilityFilter, setProbabilityFilter] = useState('');
   const [risks, setRisks] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [sortBy, setSortBy] = useState(''); // Columna para ordenar
+  const [sortDir, setSortDir] = useState('asc'); // asc o desc
 
   const fetchRisks = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/risks?search=${search}&id=${idFilter}&impact=${impactFilter}&probability=${probabilityFilter}&page=${page}&per_page=10`
+        `http://localhost:5000/risks?search=${search}&id=${idFilter}&impact=${impactFilter}&probability=${probabilityFilter}&page=${page}&per_page=10&sort_by=${sortBy}&sort_dir=${sortDir}`
       );
       setRisks(response.data.risks);
       setTotalPages(response.data.total_pages);
@@ -25,7 +27,7 @@ function App() {
 
   useEffect(() => {
     fetchRisks();
-  }, [search, idFilter, impactFilter, probabilityFilter, page]);
+  }, [search, idFilter, impactFilter, probabilityFilter, page, sortBy, sortDir]);
 
   const handleSearch = (e) => {
     setSearch(e.target.value);
@@ -45,6 +47,16 @@ function App() {
   const handleProbabilityFilter = (e) => {
     setProbabilityFilter(e.target.value);
     setPage(1);
+  };
+
+  const handleSort = (column) => {
+    if (sortBy === column) {
+      setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(column);
+      setSortDir('asc');
+    }
+    setPage(1); // Reinicia a la primera página al ordenar
   };
 
   return (
@@ -95,13 +107,48 @@ function App() {
       <table className="w-full max-w-4xl border-collapse bg-white shadow-md rounded-md">
         <thead>
           <tr className="bg-gray-200">
-            <th className="p-2 border-b">ID</th>
-            <th className="p-2 border-b">Título</th>
-            <th className="p-2 border-b">Descripción</th>
-            <th className="p-2 border-b">Impacto</th>
-            <th className="p-2 border-b">Probabilidad</th>
-            <th className="p-2 border-b">Categoría</th>
-            <th className="p-2 border-b">Estado</th>
+            <th
+              className="p-2 border-b cursor-pointer hover:bg-gray-300"
+              onClick={() => handleSort('id')}
+            >
+              ID {sortBy === 'id' ? (sortDir === 'asc' ? '↑' : '↓') : ''}
+            </th>
+            <th
+              className="p-2 border-b cursor-pointer hover:bg-gray-300"
+              onClick={() => handleSort('title')}
+            >
+              Título {sortBy === 'title' ? (sortDir === 'asc' ? '↑' : '↓') : ''}
+            </th>
+            <th
+              className="p-2 border-b cursor-pointer hover:bg-gray-300"
+              onClick={() => handleSort('description')}
+            >
+              Descripción {sortBy === 'description' ? (sortDir === 'asc' ? '↑' : '↓') : ''}
+            </th>
+            <th
+              className="p-2 border-b cursor-pointer hover:bg-gray-300"
+              onClick={() => handleSort('impact')}
+            >
+              Impacto {sortBy === 'impact' ? (sortDir === 'asc' ? '↑' : '↓') : ''}
+            </th>
+            <th
+              className="p-2 border-b cursor-pointer hover:bg-gray-300"
+              onClick={() => handleSort('probability')}
+            >
+              Probabilidad {sortBy === 'probability' ? (sortDir === 'asc' ? '↑' : '↓') : ''}
+            </th>
+            <th
+              className="p-2 border-b cursor-pointer hover:bg-gray-300"
+              onClick={() => handleSort('category')}
+            >
+              Categoría {sortBy === 'category' ? (sortDir === 'asc' ? '↑' : '↓') : ''}
+            </th>
+            <th
+              className="p-2 border-b cursor-pointer hover:bg-gray-300"
+              onClick={() => handleSort('status')}
+            >
+              Estado {sortBy === 'status' ? (sortDir === 'asc' ? '↑' : '↓') : ''}
+            </th>
           </tr>
         </thead>
         <tbody>
