@@ -8,15 +8,16 @@ function App() {
   const [probabilityFilter, setProbabilityFilter] = useState('');
   const [risks, setRisks] = useState([]);
   const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(10); // Nuevo estado para registros por página
   const [totalPages, setTotalPages] = useState(1);
-  const [sortBy, setSortBy] = useState(''); // Columna para ordenar
-  const [sortDir, setSortDir] = useState('asc'); // asc o desc
+  const [sortBy, setSortBy] = useState('');
+  const [sortDir, setSortDir] = useState('asc');
 
   const fetchRisks = async () => {
     try {
-      const response = await axios.get(
-        `http://localhost:5000/risks?search=${search}&id=${idFilter}&impact=${impactFilter}&probability=${probabilityFilter}&page=${page}&per_page=10&sort_by=${sortBy}&sort_dir=${sortDir}`
-      );
+      const url = `http://localhost:5000/risks?search=${search}&id=${idFilter}&impact=${impactFilter}&probability=${probabilityFilter}&page=${page}&per_page=${perPage}&sort_by=${sortBy}&sort_dir=${sortDir}`;
+      console.log('Fetching URL:', url); // Depuración
+      const response = await axios.get(url);
       setRisks(response.data.risks);
       setTotalPages(response.data.total_pages);
     } catch (error) {
@@ -27,7 +28,7 @@ function App() {
 
   useEffect(() => {
     fetchRisks();
-  }, [search, idFilter, impactFilter, probabilityFilter, page, sortBy, sortDir]);
+  }, [search, idFilter, impactFilter, probabilityFilter, page, perPage, sortBy, sortDir]);
 
   const handleSearch = (e) => {
     setSearch(e.target.value);
@@ -56,7 +57,12 @@ function App() {
       setSortBy(column);
       setSortDir('asc');
     }
-    setPage(1); // Reinicia a la primera página al ordenar
+    setPage(1);
+  };
+
+  const handlePerPageChange = (e) => {
+    setPerPage(Number(e.target.value));
+    setPage(1); // Reinicia a la primera página al cambiar perPage
   };
 
   return (
@@ -191,6 +197,15 @@ function App() {
         >
           Siguiente
         </button>
+        <select
+          value={perPage}
+          onChange={handlePerPageChange}
+          className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="10">10 por página</option>
+          <option value="20">20 por página</option>
+          <option value="50">50 por página</option>
+        </select>
       </div>
     </div>
   );
