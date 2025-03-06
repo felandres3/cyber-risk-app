@@ -127,7 +127,3 @@ Asegúrate de tener instalados los siguientes requisitos:
 
 - El **frontend en React** se conecta a los endpoints mencionados.
 - Revisa `ARCHITECTURE.md` para más detalles del diseño y estructura del proyecto.
-
----
-
-🚀 **Cyber Risks App** facilita la gestión de riesgos de ciberseguridad de manera eficiente y automatizada. ¡Contribuye y ayúdanos a mejorar! 🎯
