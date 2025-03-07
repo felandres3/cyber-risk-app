@@ -1,6 +1,7 @@
 import React from 'react';
 
 function Filters({ idValue, onIdChange, impactValue, onImpactChange, probabilityValue, onProbabilityChange, perPage, onPerPageChange }) {
+  // Componente para filtrar riesgos por ID, impacto, probabilidad y cantidad por página
   return (
     <div className="flex flex-col gap-4 mb-4 w-full max-w-md">
       <div className="flex gap-4">

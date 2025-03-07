@@ -1,8 +1,10 @@
 from dotenv import load_dotenv
 import os
 
+# Carga las variables de entorno desde el archivo .env
 load_dotenv()
 
+# Configuración de la base de datos usando variables de entorno
 DB_CONFIG = {
     "dbname": os.getenv("DB_NAME"),
     "user": os.getenv("DB_USER"),

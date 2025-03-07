@@ -1,6 +1,7 @@
 import React from 'react';
 
 function RiskTable({ risks, search, sortBy, sortDir, onSort }) {
+  // Resalta el texto coincidente con el término de búsqueda
   const highlightText = (text, searchTerm) => {
     if (!searchTerm || !text) return text;
     const regex = new RegExp(`(${searchTerm})`, 'gi');
@@ -12,6 +13,7 @@ function RiskTable({ risks, search, sortBy, sortDir, onSort }) {
     );
   };
 
+  // Renderiza la tabla de riesgos con columnas ordenables
   return (
     <table className="w-full max-w-4xl border-collapse bg-white shadow-md rounded-md">
       <thead>
@@ -74,6 +76,7 @@ function RiskTable({ risks, search, sortBy, sortDir, onSort }) {
             </tr>
           ))
         ) : (
+          // Mensaje dinámico si no hay riesgos
           <tr>
             <td colSpan="7" className="p-4 text-center text-gray-500">
               {(search) ? 'No se encontraron riesgos' : 'Escribe algo para buscar riesgos'}

@@ -3,8 +3,10 @@ from config import DB_CONFIG
 from models import Result
 
 def get_db_connection():
+    """Establece y retorna una conexión a la base de datos."""
     return psycopg2.connect(**DB_CONFIG)
 
+# Diccionario de funciones para construir filtros dinámicos en la consulta SQL
 FILTER_PREDICATES = {
     "search": lambda value: ("(title ILIKE %s OR description ILIKE %s)", [f"%{value}%", f"%{value}%"]),
     "id": lambda value: ("id = %s", [value]),
@@ -19,9 +21,11 @@ def get_risks(search=None, risk_id=None, impact=None, probability=None, page=1, 
         conn = get_db_connection()
         cur = conn.cursor()
 
+        # Construcción de la consulta base
         query = "SELECT id, title, description, impact, probability, category, status FROM risks WHERE 1=1"
         params = []
 
+        # Filtros aplicables
         filters = {
             "search": search,
             "id": risk_id,
@@ -31,6 +35,7 @@ def get_risks(search=None, risk_id=None, impact=None, probability=None, page=1, 
 
         print(f"Received params: search={search}, id={risk_id}, impact={impact}, probability={probability}, sort_by={sort_by}, sort_dir={sort_dir}")
 
+        # Agregar condiciones de filtro dinámicamente
         for filter_name, filter_value in filters.items():
             if filter_value:
                 condition, param_values = FILTER_PREDICATES[filter_name](filter_value)
@@ -47,7 +52,7 @@ def get_risks(search=None, risk_id=None, impact=None, probability=None, page=1, 
         print(f"Query before pagination: {query}")
         print(f"Params before pagination: {params}")
 
-        # Contar total
+        # Obtener total de registros antes de paginación
         count_query = f"SELECT COUNT(*) FROM ({query}) AS total"
         cur.execute(count_query, params)
         total_risks = cur.fetchone()[0]
@@ -60,10 +65,12 @@ def get_risks(search=None, risk_id=None, impact=None, probability=None, page=1, 
         print(f"Final query: {query}")
         print(f"Final params: {params}")
 
+        # Ejecutar consulta final con paginación
         cur.execute(query, params)
         risks = cur.fetchall()
         print(f"Fetched risks: {risks}")
 
+        # Convertir los resultados en una lista de diccionarios
         risks_list = [
             {
                 "id": row[0],
@@ -77,6 +84,7 @@ def get_risks(search=None, risk_id=None, impact=None, probability=None, page=1, 
             for row in risks
         ]
 
+        # Retornar resultado con metadatos de paginación
         result = {
             "risks": risks_list,
             "total": total_risks,
@@ -85,10 +93,13 @@ def get_risks(search=None, risk_id=None, impact=None, probability=None, page=1, 
             "total_pages": (total_risks + per_page - 1) // per_page
         }
         return Result.success(result)
+    
     except Exception as e:
         print(f"Exception: {str(e)}")
         return Result.failure(f"Database error: {str(e)}")
+    
     finally:
+        # Cerrar cursor y conexión para evitar fugas de memoria
         if cur:
             cur.close()
         if conn:

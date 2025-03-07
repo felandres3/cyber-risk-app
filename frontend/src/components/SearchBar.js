@@ -1,6 +1,7 @@
 import React from 'react';
 
 function SearchBar({ value, onChange }) {
+  // Componente de input controlado para búsqueda de riesgos
   return (
     <input
       type="text"

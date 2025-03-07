@@ -1,6 +1,7 @@
 import React from 'react';
 
 function PaginationControls({ page, totalPages, risksLength, onPageChange }) {
+  // Componente para controlar la paginación con botones y estado
   return (
     <div className="mt-4 flex gap-4 items-center">
       <button
