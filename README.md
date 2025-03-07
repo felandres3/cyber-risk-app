@@ -62,7 +62,7 @@ Asegúrate de tener instalados los siguientes requisitos:
 
 6. Configura la base de datos:
    ```sh
-   python init.py
+   psql -U usuario -d base_de_datos -f backend/database/init.sql
    ```
 
 7. Pobla la base de datos con datos de prueba:
