@@ -1,69 +1,46 @@
-# Arquitectura de Cyber Risks App
+# Arquitectura del Sistema
 
-## Introducción
-Cyber Risks App es una herramienta diseñada para gestionar riesgos de ciberseguridad en una empresa. Permite buscar y filtrar riesgos (como ataques o fugas) desde un frontend en React conectado a un backend Flask, con PostgreSQL como base de datos.
+![Diagrama de Arquitectura](../docs/arch.png)
+## Descripción General
+La aplicación utiliza una arquitectura **cliente-servidor** para la gestión de riesgos de ciberseguridad. Este diseño separa el frontend (cliente) del backend (servidor), facilitando modularidad y mantenimiento. La comunicación entre ambos se realiza mediante una API RESTful, garantizando simplicidad e interoperabilidad.
 
-## Visión general
-- **Frontend**: React 🚀.
-- **Backend**: Flask con rutas RESTful 🌐.
-- **Base de datos**: PostgreSQL con una tabla `risks` 🗄️.
-- **Arquitectura**: Capas simples con enfoque RESTful, usando patrones como Repository y Result 🛠️.
+### Componentes
+- **Frontend**: ReactJS  
+- **Backend**: Python con Flask  
+- **Base de datos**: PostgreSQL  
 
-## Componentes
-- **`app.py`**: Punto de entrada que arranca Flask y registra las rutas. 🎬
-- **`routes.py`**: Define los endpoints REST (`/` y `/risks`) y pasa parámetros al repositorio. 🛤️
-- **`repository.py`**: Maneja la lógica de la base de datos con filtros dinámicos. 🗃️
-- **`config.py`**: Carga la configuración de la DB desde un archivo `.env`. ⚙️
-- **`models.py`**: Clase `Result` para manejar éxito o fallo de operaciones. ✅❌
-- **`populate_db.py`**: Script para generar datos de prueba masivos. 📈
-- **`test_risks.py`**: Tests automatizados con `pytest` para asegurar que todo funcione. 🧪
+## Base de Datos  
+La aplicación utiliza una base de datos **PostgreSQL** con la siguiente estructura:
 
-## Flujo de datos
-1. El usuario envía un `GET /risks?search=ataque` desde el frontend. 📥
-2. `routes.py` captura el request, extrae `search=ataque` y llama a `repository.py`. 🔍
-3. `repository.py` arma una consulta SQL, se conecta a PostgreSQL y devuelve un `Result`. 🗄️
-4. `routes.py` transforma el `Result` en JSON y lo envía de vuelta al usuario. 📤
+| Campo        | Tipo de Dato    | Restricciones                                              | Descripción                        |
+|-------------|---------------|------------------------------------------------------------|------------------------------------|
+| `id`        | SERIAL        | PRIMARY KEY                                               | Identificador único del riesgo.    |
+| `title`     | VARCHAR(100)  | NOT NULL                                                  | Título del riesgo.                 |
+| `description` | TEXT          | Ninguna                                                   | Descripción detallada del riesgo.  |
+| `impact`    | INTEGER       | NOT NULL, CHECK (impact BETWEEN 1 AND 5)                   | Nivel de impacto (1-5).           |
+| `probability` | INTEGER       | NOT NULL, CHECK (probability BETWEEN 1 AND 5)             | Nivel de probabilidad (1-5).      |
+| `category`  | VARCHAR(50)   | Ninguna                                                   | Categoría del riesgo.             |
+| `status`    | VARCHAR(20)   | NOT NULL                                                  | Estado actual del riesgo.         |
 
-## Decisiones de diseño
+### Flujo de Datos
+El usuario interactúa con el frontend en un navegador, que envía solicitudes HTTP al backend. El backend procesa estas solicitudes, consulta la base de datos PostgreSQL y devuelve respuestas en formato JSON, las cuales el frontend renderiza para el usuario.
 
-### Result Pattern
-- **Por qué**: Usamos este patrón para tener control total sobre éxito o fallo, evitando excepciones caóticas. Mejora la testeabilidad y claridad del código. ✅
-- **Código**:
-  ```python
-  class Result:
-      def __init__(self, success, value=None, error=None):
-          self.success = success
-          self.value = value
-          self.error = error
+## Decisiones de Diseño  
 
-      @staticmethod
-      def success(value):
-          return Result(True, value=value)
+1. **Uso de Flask sin ORM**  
+   - Se decidió **no utilizar un ORM** como SQLAlchemy porque, al ser un proyecto pequeño, no era necesario.  
+   - Las consultas SQL se escriben manualmente para un mayor control y optimización del rendimiento.  
+   - Se implementaron medidas para proteger las consultas contra **inyección SQL (SQLi)**, asegurando la seguridad del sistema.  
 
-      @staticmethod
-      def failure(error):
-          return Result(False, error=error)
+2. **Paginación en el backend**  
+   - Se implementó paginación para limitar la cantidad de resultados enviados en cada solicitud, mejorando el rendimiento del sistema.  
+   - Se devuelve un número limitado de registros por página cuando hay más de 10 entradas.  
 
+3. **Estrategia de carga de componentes en el frontend**  
+   - React permite dividir la interfaz en componentes reutilizables y optimizados.  
+   - Se evita la carga innecesaria de datos manejando estados de manera eficiente.  
 
-### Diccionario de predicados
-- **Por qué**: Elegimos esto para los filtros porque es flexible y legible. Permite añadir nuevos filtros sin ensuciar el código con `ifs` 🌟
-- **Código**:
-  ```python
-  FILTER_PREDICATES = {
-    "search": lambda value: (
-        "(title ILIKE %s OR description ILIKE %s)",
-        [f"%{value}%", f"%{value}%"]
-        ),
-        "id": lambda value: ("id = %s", [value])
-    }
-
-
-### Sin ORM (usando SQL crudo)
-- **Por qué**: Optamos por no usar un ORM como SQLAlchemy para mantener simplicidad y control directo en este proyecto pequeño. Además, con psycopg2 y parámetros preparados `(%s)`, estamos protegidos contra SQL Injection. 🛡️
-- **Código**:
-  ```python
-    query = "SELECT * FROM risks WHERE title ILIKE %s"
-    params = ["%ataque%"]
-    cur.execute(query, params)
-
-
+4. **Búsqueda sin botón de acción**  
+   - Se decidió **no incluir un botón de búsqueda** en el frontend porque así la interacción se siente más fluida.  
+   - Cada vez que el usuario teclea, se envía una petición automáticamente al backend, asegurando una búsqueda en tiempo real.  
+   - Este enfoque fue elegido considerando que es una prueba técnica, priorizando una experiencia más dinámica y sin fricciones para el usuario.  
