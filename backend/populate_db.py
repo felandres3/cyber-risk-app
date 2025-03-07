@@ -43,7 +43,8 @@ def populate_db(num_records=1000):
         print(f"Insertados {num_records} registros en la tabla risks.")
     except Exception as e:
         print(f"Error: {str(e)}")
-        conn.rollback()  # Revierte en caso de error
+        if conn:
+            conn.rollback()
     finally:
         if cur:
             cur.close()
